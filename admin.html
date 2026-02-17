@@ -200,7 +200,8 @@
   const SUPABASE_URL = 'https://wkwgyoowhfhkyqwlufup.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indrd2d5b293aGZoa3lxd2x1ZnVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNDQwMTIsImV4cCI6MjA4NjkyMDAxMn0.ArSqtBC9K_268UnAfwTiqgYoJXGoXDmp1n9J2ISzgLE';
 
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { createClient } = supabase;
+  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const DEFAULTS = {
     company: { name:"[Company Name]", tagline:"Building brands that convert — at scale.", lastUpdated:"February 2026", maintainedBy:"COO / Operations", version:"1.0" },
@@ -217,13 +218,13 @@
   let CONFIG = {};
 
   async function init() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) {
       window.location.href = 'login.html';
       return;
     }
 
-    const { data: users } = await supabase.from('users').select('*').eq('email', session.user.email).single();
+    const { data: users } = await supabaseClient.from('users').select('*').eq('email', session.user.email).single();
     const currentUser = users || { role: 'Employee' };
 
     if (currentUser.role !== 'CEO' && currentUser.role !== 'COO') {
@@ -232,7 +233,7 @@
       return;
     }
 
-    const { data: content } = await supabase.from('sop_content').select('*');
+    const { data: content } = await supabaseClient.from('sop_content').select('*');
     CONFIG = JSON.parse(JSON.stringify(DEFAULTS));
     if (content && content.length > 0) {
       content.forEach(row => {
@@ -374,7 +375,7 @@
     const sections = ['company', 'whoWeAre', 'mission', 'values', 'org', 'tools', 'toolsNote', 'policies', 'philosophy'];
     
     for (const section of sections) {
-      await supabase.from('sop_content').upsert({
+      await supabaseClient.from('sop_content').upsert({
         section,
         content: CONFIG[section],
         updated_at: new Date().toISOString()
