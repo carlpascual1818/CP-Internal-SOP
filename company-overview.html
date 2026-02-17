@@ -100,7 +100,8 @@
   const SUPABASE_URL = 'https://wkwgyoowhfhkyqwlufup.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indrd2d5b293aGZoa3lxd2x1ZnVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNDQwMTIsImV4cCI6MjA4NjkyMDAxMn0.ArSqtBC9K_268UnAfwTiqgYoJXGoXDmp1n9J2ISzgLE';
 
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { createClient } = supabase;
+  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   let currentUser = null;
   let sopData = {};
@@ -118,18 +119,18 @@
   };
 
   async function init() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) {
       window.location.href = 'login.html';
       return;
     }
 
     // Get user data
-    const { data: users } = await supabase.from('users').select('*').eq('email', session.user.email).single();
+    const { data: users } = await supabaseClient.from('users').select('*').eq('email', session.user.email).single();
     currentUser = users || { name: session.user.email, role: 'Employee', email: session.user.email };
 
     // Get SOP content
-    const { data: content } = await supabase.from('sop_content').select('*');
+    const { data: content } = await supabaseClient.from('sop_content').select('*');
     if (content && content.length > 0) {
       content.forEach(row => {
         sopData[row.section] = row.content;
@@ -272,7 +273,7 @@
   }
 
   async function logout() {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     window.location.href = 'login.html';
   }
 
